@@ -5,35 +5,60 @@ import java.sql.*;
 import javax.sql.DataSource;
 
 public class Main {
-    public static void main(String[] args) throws SQLException, ClassNotFoundException {
-        displayCities(103);
-    }
 
+    private static sqlConnectionInfo sqlConnectionInfo;
 
-    public static void displayCities(int countryId) throws SQLException, ClassNotFoundException  {
+    public static void main(String[] args) {
 
-        if (args.length != 2) {
+        if (args.length != 3) {
             System.out.println(
-                    "Application needs two arguments to run: " +
-                            "java com.pluralsight.Main <username> <password>");
+                    "Application needs three arguments to run: " +
+                            "java com.pluralsight.Main <username> <password> <sqlUrl>");
             System.exit(1);
         }
 
+        sqlConnectionInfo = getSqlConnectionInfoFromArgs(args);
+
+        try{
+            displayCities(103);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+
+
+
+    }
+
+    public static sqlConnectionInfo getSqlConnectionInfoFromArgs(String[] args){
         // get the user name and password from the command line args
         String username = args[0];
         String password = args[1];
 
-        System.out.println("Hello world!");
+        String connectionString = args[2];
 
-        String connectionString = "jdbc:mysql://localhost:3306/sakila";
+        return new sqlConnectionInfo(connectionString, username, password);
+    }
 
+
+    public static void displayCities(int countryId) throws SQLException {
+
+        Connection connection = null;
+        PreparedStatement ps = null;
+        ResultSet results = null;
+
+    try{
 
         // load the MySQL Driver
         Class.forName("com.mysql.cj.jdbc.Driver");
 // 1. open a connection to the database
 // use the database URL to point to the correct database
-        Connection connection;
-        connection = DriverManager.getConnection(connectionString, username,password);
+
+
+        connection = DriverManager.getConnection(
+                sqlConnectionInfo.getConnectionString(),
+                sqlConnectionInfo.getUsername(),
+                sqlConnectionInfo.getPassword());
 
 
         // define your query
@@ -43,14 +68,13 @@ public class Main {
         // create statement
 // the statement is tied to the open connection
 
-
-        PreparedStatement ps = connection.prepareStatement(query);
+        ps = connection.prepareStatement(query);
         ps.setInt(1, countryId);
 
 
 
 // 2. Execute your query
-        ResultSet results = ps.executeQuery();
+        results = ps.executeQuery();
 
 // process the results
         while (results.next()) {
@@ -58,9 +82,22 @@ public class Main {
             System.out.println(city);
         }
 // 3. Close the connection
-        results.close();
-        ps.close();
-        connection.close();
+
+
+    }
+    catch(Exception e)
+    {
+        e.printStackTrace();
+    }
+    finally {
+
+        if(results != null) results.close();
+        if(ps != null) ps.close();
+        if(connection != null) connection.close();
+
+
+    }
+
 
     }
 
