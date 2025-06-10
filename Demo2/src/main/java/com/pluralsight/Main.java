@@ -41,63 +41,50 @@ public class Main {
     }
 
 
-    public static void displayCities(int countryId) throws SQLException {
-
-        Connection connection = null;
-        PreparedStatement ps = null;
-        ResultSet results = null;
-
-    try{
+    public static void displayCities(int countryId) throws SQLException, ClassNotFoundException {
 
         // load the MySQL Driver
         Class.forName("com.mysql.cj.jdbc.Driver");
-// 1. open a connection to the database
-// use the database URL to point to the correct database
 
 
-        connection = DriverManager.getConnection(
-                sqlConnectionInfo.getConnectionString(),
-                sqlConnectionInfo.getUsername(),
-                sqlConnectionInfo.getPassword());
+        try (Connection connection = DriverManager.getConnection( sqlConnectionInfo.getConnectionString(), sqlConnectionInfo.getUsername(), sqlConnectionInfo.getPassword());
+             PreparedStatement ps = connection.prepareStatement("SELECT city FROM city WHERE country_id = ?");)
+        {
+            ps.setInt(1, countryId);
+
+            try(ResultSet results = ps.executeQuery()) {
+                while (results.next()) {
+                    String city = results.getString("city");
+                    System.out.println(city);
+                }
+            }
 
 
-        // define your query
-        String query = "SELECT city FROM city " +
-                "WHERE country_id = ?";
-
-        // create statement
-// the statement is tied to the open connection
-
-        ps = connection.prepareStatement(query);
-        ps.setInt(1, countryId);
-
-
-
-// 2. Execute your query
-        results = ps.executeQuery();
-
-// process the results
-        while (results.next()) {
-            String city = results.getString("city");
-            System.out.println(city);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-// 3. Close the connection
-
-
-    }
-    catch(Exception e)
-    {
-        e.printStackTrace();
-    }
-    finally {
-
-        if(results != null) results.close();
-        if(ps != null) ps.close();
-        if(connection != null) connection.close();
-
 
     }
 
+    public static void displayAllCities() throws SQLException, ClassNotFoundException {
+
+        // load the MySQL Driver
+        Class.forName("com.mysql.cj.jdbc.Driver");
+
+
+        try (Connection connection = DriverManager.getConnection( sqlConnectionInfo.getConnectionString(), sqlConnectionInfo.getUsername(), sqlConnectionInfo.getPassword());
+             PreparedStatement ps = connection.prepareStatement("SELECT city FROM city where country_id");
+             ResultSet results = ps.executeQuery();
+             )
+        {
+                while (results.next()) {
+                    String city = results.getString("city");
+                    System.out.println(city);
+                }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
     }
 
