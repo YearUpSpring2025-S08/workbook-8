@@ -1,5 +1,7 @@
 package com.pluralsight;
 
+import org.apache.commons.dbcp2.BasicDataSource;
+
 import java.sql.*;
 
 public class Main {
@@ -34,8 +36,12 @@ public class Main {
         String password = args[1];
 
         String connectionString = args[2];
+        BasicDataSource result = new BasicDataSource();
+        result.setUsername(username);
+        result.setPassword(password);
+        result.setUrl(connectionString);
 
-        return new BasicDataSource(connectionString, username, password);
+        return result;
     }
 
 
@@ -68,12 +74,9 @@ public class Main {
     }
 
     public static void displayAllCities() throws SQLException, ClassNotFoundException {
+        
 
-        // load the MySQL Driver
-        Class.forName("com.mysql.cj.jdbc.Driver");
-
-
-        try (Connection connection = DriverManager.getConnection( basicDataSource.getConnectionString(), basicDataSource.getUsername(), basicDataSource.getPassword());
+        try (Connection connection = basicDataSource.getConnection();
              PreparedStatement ps = connection.prepareStatement("SELECT city FROM city where country_id");
              ResultSet results = ps.executeQuery();
              )
